@@ -4,6 +4,7 @@
 
 - Dataset: AI4I 2020 Predictive Maintenance Dataset
 - Repository: UCI Machine Learning Repository
+- UCI dataset ID: `601`
 - URL: <https://archive.ics.uci.edu/dataset/601/ai4i>
 - DOI: `10.24432/C5HS5C`
 - License: Creative Commons Attribution 4.0 International, CC BY 4.0
@@ -16,14 +17,20 @@ The dataset is synthetic and intended to reflect predictive-maintenance data enc
 Fetch the dataset locally:
 
 ```powershell
-.\scripts\fetch_data.ps1
+python scripts/fetch_ai4i.py
 ```
 
-The raw CSV is saved to `data/raw/ai4i2020.csv`. This path is ignored by Git so the full dataset is not committed.
+The acquisition script uses the existing `ucimlrepo` dependency to request UCI dataset ID `601`. The raw CSV is saved to `data/raw/ai4i2020.csv`. This path is ignored by Git so the full dataset is not committed.
+
+UCI's API may expose measurement units through metadata and return normalized
+column names such as `Air temperature`, `Process temperature`, and `UID`.
+OpsGuard normalizes those API names into the original CSV-style schema before
+validation and storage so `data/raw/ai4i2020.csv` has stable canonical headers
+across acquisition methods.
 
 ## Schema
 
-Expected columns:
+Expected stored columns:
 
 - `UDI`
 - `Product ID`
@@ -68,12 +75,15 @@ Excluded from features:
 
 The project validates:
 
+- UCI metadata identifies dataset ID `601`, AI4I 2020 Predictive Maintenance Dataset.
 - Required columns are present.
+- The target column `Machine failure` is present.
 - Required values are not missing.
 - Target and failure-mode columns are binary.
 - The primary target contains both classes.
-- Numeric features are numeric.
-- Feature matrices exclude identifier and target/leakage columns.
+- Expected numeric columns are numeric, `UDI` is an integer identifier, `Product ID` is an identifier, and `Type` is categorical text.
+- Identifier columns are identified but excluded from predictive features.
+- Target class balance is reported in the local validation summary.
 
 ## Known Limitations
 

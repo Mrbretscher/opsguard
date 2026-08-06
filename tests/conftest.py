@@ -22,3 +22,31 @@ def valid_ai4i_frame() -> pd.DataFrame:
             "RNF": [0, 0, 0, 0, 0, 0],
         }
     )
+
+
+@pytest.fixture()
+def baseline_ai4i_frame() -> pd.DataFrame:
+    rows = 40
+    target = [1 if index in {5, 13, 27, 34} else 0 for index in range(rows)]
+    return pd.DataFrame(
+        {
+            "UDI": list(range(1, rows + 1)),
+            "Product ID": [f"L{47181 + index}" for index in range(rows)],
+            "Type": [["L", "M", "H"][index % 3] for index in range(rows)],
+            "Air temperature [K]": [298.0 + (index % 8) * 0.3 for index in range(rows)],
+            "Process temperature [K]": [
+                308.0 + (index % 7) * 0.4 for index in range(rows)
+            ],
+            "Rotational speed [rpm]": [
+                1200 + (index * 37) % 500 for index in range(rows)
+            ],
+            "Torque [Nm]": [35.0 + (index * 1.7) % 35 for index in range(rows)],
+            "Tool wear [min]": [(index * 6) % 240 for index in range(rows)],
+            "Machine failure": target,
+            "TWF": [1 if index == 5 else 0 for index in range(rows)],
+            "HDF": [1 if index == 13 else 0 for index in range(rows)],
+            "PWF": [1 if index == 27 else 0 for index in range(rows)],
+            "OSF": [1 if index == 34 else 0 for index in range(rows)],
+            "RNF": [0 for _ in range(rows)],
+        }
+    )

@@ -85,11 +85,11 @@ def build_random_forest_pipeline(
             (
                 "model",
                 RandomForestClassifier(
-                    n_estimators=200,
+                    n_estimators=50,
                     min_samples_leaf=2,
                     class_weight="balanced",
                     random_state=random_state,
-                    n_jobs=-1,
+                    n_jobs=1,
                 ),
             ),
         ]

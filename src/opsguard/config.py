@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 RAW_DATA_PATH = RAW_DATA_DIR / "ai4i2020.csv"
+REPORTS_DIR = PROJECT_ROOT / "reports"
 
 ID_COLUMNS = ("UDI", "UID", "Product ID")
 CATEGORICAL_FEATURES = ("Type",)

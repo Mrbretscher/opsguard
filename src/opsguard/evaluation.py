@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
+    accuracy_score,
     average_precision_score,
     balanced_accuracy_score,
     classification_report,
@@ -25,15 +26,24 @@ def evaluate_binary_classifier(
     threshold: float = 0.5,
 ) -> dict[str, Any]:
     """Evaluate a binary classifier with imbalanced-classification metrics."""
-    scores = _positive_class_scores(estimator, x_test)
+    scores = positive_class_scores(estimator, x_test)
     y_pred = (scores >= threshold).astype(int)
+    pr_auc = float(average_precision_score(y_test, scores))
+    precision = float(precision_score(y_test, y_pred, zero_division=0))
+    recall = float(recall_score(y_test, y_pred, zero_division=0))
+    f1 = float(f1_score(y_test, y_pred, zero_division=0))
 
     metrics: dict[str, Any] = {
         "threshold": threshold,
-        "average_precision": float(average_precision_score(y_test, scores)),
-        "recall_failure": float(recall_score(y_test, y_pred, zero_division=0)),
-        "precision_failure": float(precision_score(y_test, y_pred, zero_division=0)),
-        "f1_failure": float(f1_score(y_test, y_pred, zero_division=0)),
+        "accuracy": float(accuracy_score(y_test, y_pred)),
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "pr_auc": pr_auc,
+        "average_precision": pr_auc,
+        "recall_failure": recall,
+        "precision_failure": precision,
+        "f1_failure": f1,
         "balanced_accuracy": float(balanced_accuracy_score(y_test, y_pred)),
         "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
         "classification_report": classification_report(
@@ -85,7 +95,8 @@ def threshold_table(
     return pd.DataFrame(rows)
 
 
-def _positive_class_scores(estimator: Any, x_test: pd.DataFrame) -> np.ndarray:
+def positive_class_scores(estimator: Any, x_test: pd.DataFrame) -> np.ndarray:
+    """Return model scores where larger values indicate class-1 failure risk."""
     if hasattr(estimator, "predict_proba"):
         probabilities = estimator.predict_proba(x_test)
         return np.asarray(probabilities)[:, 1]

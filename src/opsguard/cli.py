@@ -4,11 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from opsguard.data import fetch_ai4i_dataset, load_ai4i_csv
-from opsguard.evaluation import evaluate_binary_classifier
-from opsguard.features import split_features_target
-from opsguard.modeling import build_baseline_pipelines, make_train_test_split
-from opsguard.validation import validate_ai4i_frame
+from opsguard.data import fetch_ai4i_dataset
+from opsguard.training import run_baseline_training
 
 
 def main() -> None:
@@ -24,6 +21,7 @@ def main() -> None:
         help="Train and evaluate all Milestone 1 baselines.",
     )
     evaluate_parser.add_argument("--data", type=Path, default=None)
+    evaluate_parser.add_argument("--report-dir", type=Path, default=Path("reports"))
 
     args = parser.parse_args()
 
@@ -36,20 +34,12 @@ def main() -> None:
         return
 
     if args.command == "evaluate-baselines":
-        frame = load_ai4i_csv(args.data if args.data else Path("data/raw/ai4i2020.csv"))
-        validate_ai4i_frame(frame)
-        features, target = split_features_target(frame)
-        split = make_train_test_split(features, target)
-
-        results = {}
-        for name, pipeline in build_baseline_pipelines().items():
-            pipeline.fit(split.x_train, split.y_train)
-            results[name] = evaluate_binary_classifier(
-                pipeline,
-                split.x_test,
-                split.y_test,
-            )
-        print(json.dumps(results, indent=2))
+        run = run_baseline_training(
+            data_path=args.data if args.data else Path("data/raw/ai4i2020.csv"),
+            report_dir=args.report_dir,
+        )
+        print(json.dumps(run.report, indent=2))
+        print(f"Saved metrics to {run.metrics_path}")
 
 
 if __name__ == "__main__":
