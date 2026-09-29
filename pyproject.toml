@@ -21,6 +21,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+app = [
+    "streamlit",
+]
 dev = [
     "pytest",
     "pytest-cov",
@@ -70,6 +73,7 @@ check_untyped_defs = true
 module = [
   "matplotlib.*",
   "sklearn.*",
+  "streamlit.*",
   "ucimlrepo.*",
 ]
 ignore_missing_imports = true

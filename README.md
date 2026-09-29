@@ -18,6 +18,8 @@ This is not a production maintenance system. It is a portfolio baseline intended
 - Dummy, logistic-regression, and random-forest baselines.
 - Evaluation for an imbalanced binary failure-classification problem.
 - Machine-readable local metrics and diagnostic plots under ignored `reports/`.
+- Persisted selected model artifacts under ignored `models/`.
+- Optional Streamlit GUI for local single-record inference and report review.
 - Unit tests, Ruff formatting/linting, mypy, and PowerShell verification scripts.
 
 ## Dataset
@@ -98,11 +100,75 @@ The evaluation emphasizes minority-class failure detection rather than plain acc
 - Confusion matrix
 - Balanced accuracy
 - Classification report
-- Precision/recall threshold table
+- Threshold table with precision, recall, F1, confusion counts, false-positive rate, and false-negative rate
+- Operating-threshold metadata for the selected baseline
+- Confusion-matrix interpretation and false-positive/false-negative notes
 
-The default threshold is `0.5`. No operational threshold is presented as production-ready, and the final test set is not used for hyperparameter tuning or threshold selection in Milestone 1B.
+The default threshold is `0.5`. It is recorded as a fixed reporting convention, not an optimized or operationally approved operating point. No threshold is presented as production-ready, and the final test set is not used for hyperparameter tuning or threshold selection in Milestone 1B.
 
 Metrics are saved to `reports/baseline_metrics.json`. Confusion-matrix and precision-recall plots are saved to `reports/plots/`. These generated files are ignored by Git.
+
+The workflow also selects the baseline with the highest average precision and
+saves it under `models/` with:
+
+- `pipeline.pkl`: the fitted scikit-learn pipeline, including preprocessing.
+- `metadata.json`: the model name, feature schema, threshold, random seed,
+  training timestamp, dataset source, selection metric, and key evaluation
+  metrics, including the selected threshold metadata and error-analysis notes.
+
+Load a saved artifact and score one machine-condition record with:
+
+```python
+from opsguard.inference import predict_failure
+
+result = predict_failure(
+    {
+        "Type": "L",
+        "Air temperature [K]": 298.1,
+        "Process temperature [K]": 308.6,
+        "Rotational speed [rpm]": 1551,
+        "Torque [Nm]": 42.8,
+        "Tool wear [min]": 0,
+    },
+    "models/<artifact-directory>",
+)
+print(result.to_dict())
+```
+
+## Streamlit GUI
+
+Install the optional app dependency after the normal local setup:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[app]"
+```
+
+Generate local reports and a saved model artifact first:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
+```
+
+Then launch the GUI:
+
+```powershell
+.\scripts\run_streamlit_app.ps1
+```
+
+The app reads the latest JSON metrics report from `reports/`, loads the selected
+saved model artifact from `models/`, and opens with a portfolio-demo summary of
+the selected baseline, artifact threshold, local report, dataset documentation,
+and evaluation plan. The risk-check screen includes example machine-condition
+presets that can be edited before scoring the six leakage-controlled model
+inputs. Results are shown as an exploratory risk panel, not as maintenance
+instructions.
+
+The evaluation screen displays the selected model's metrics, diagnostic plots,
+and a threshold tradeoff chart. Changing the GUI threshold does not modify the
+saved artifact and should not be treated as an approved production operating
+point. The app also includes a limitations screen to keep the demo clear about
+synthetic data, class imbalance, missing production workflows, and threshold
+selection caveats.
 
 ## Verify
 
@@ -118,16 +184,32 @@ The verification script runs:
 - `pytest --cov=opsguard`
 - package import smoke test
 
+## CI Checks
+
+GitHub Actions runs the same checks on Python 3.11 for pushes to `main` and
+pull requests targeting `main`.
+
+Run the CI commands locally with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m ruff format --check .
+.\.venv\Scripts\python.exe -m mypy src/opsguard
+.\.venv\Scripts\python.exe -m pytest --cov=opsguard
+.\.venv\Scripts\python.exe -c "import opsguard; print(opsguard.__version__)"
+```
+
 ## Documentation
 
 - [Project brief](docs/project_brief.md)
-- [Data card](docs/data_card.md)
+- [Data card](docs/DATA_CARD.md)
 - [Evaluation plan](docs/evaluation_plan.md)
 - [Roadmap](docs/roadmap.md)
 
 ## Explicit Non-Goals For This Release
 
-This release intentionally excludes TensorFlow, MLflow, FastAPI, Streamlit, Docker, cloud deployment, model monitoring, MetroPT-3, and a production database.
+This release intentionally excludes TensorFlow, MLflow, FastAPI, Docker, cloud deployment, model monitoring, MetroPT-3, and a production database.
 
 ## Limitations
 

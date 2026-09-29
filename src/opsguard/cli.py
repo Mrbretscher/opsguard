@@ -22,6 +22,7 @@ def main() -> None:
     )
     evaluate_parser.add_argument("--data", type=Path, default=None)
     evaluate_parser.add_argument("--report-dir", type=Path, default=Path("reports"))
+    evaluate_parser.add_argument("--model-dir", type=Path, default=Path("models"))
 
     args = parser.parse_args()
 
@@ -37,9 +38,11 @@ def main() -> None:
         run = run_baseline_training(
             data_path=args.data if args.data else Path("data/raw/ai4i2020.csv"),
             report_dir=args.report_dir,
+            model_dir=args.model_dir,
         )
         print(json.dumps(run.report, indent=2))
         print(f"Saved metrics to {run.metrics_path}")
+        print(f"Saved selected model artifact to {run.model_artifact.artifact_dir}")
 
 
 if __name__ == "__main__":

@@ -52,14 +52,18 @@ Secondary metrics:
 - ROC-AUC
 - Balanced accuracy
 - Confusion matrix
+- Confusion-matrix interpretation
 - Classification report
 - Class distribution
+- False-positive and false-negative notes
 
 Accuracy must not be used by itself to select a model because the failure class is rare.
 
 ## Threshold
 
-Evaluate the default `0.5` threshold and report a precision/recall threshold table. No threshold is considered operationally approved in Milestone 1.
+Evaluate the default `0.5` threshold and report a threshold table with precision, recall, F1, predicted-failure counts, confusion-matrix counts, false-positive rate, and false-negative rate. The selected model report also records operating-threshold metadata explaining that the default threshold is a fixed reporting convention, not an optimized or operationally approved threshold.
+
+No threshold is considered production-ready in Milestone 1. Threshold changes should be evaluated against inspection capacity, missed-failure costs, calibration quality, and validation data that was not used for final test reporting.
 
 ## Reporting Principles
 
