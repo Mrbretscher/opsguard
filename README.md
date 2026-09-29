@@ -31,12 +31,14 @@ Not implemented:
 
 ## Demo Screenshots
 
-No checked-in screenshots are currently available. Suggested placeholders:
+![OpsGuard risk-check screen](docs/images/opsguard-risk-check.png)
 
-- `docs/images/opsguard-risk-check.png`: Streamlit risk-check screen with an
-  example input preset and result panel.
-- `docs/images/opsguard-threshold-tradeoff.png`: Streamlit evaluation screen
-  showing the threshold tradeoff chart and selected-model metrics.
+Streamlit risk-check screen with an example input preset and result panel.
+
+![OpsGuard threshold tradeoff screen](docs/images/opsguard-threshold-tradeoff.png)
+
+Streamlit evaluation screen with the threshold tradeoff chart and selected-model
+metrics.
 
 ## Quick Demo
 
@@ -355,7 +357,7 @@ pushes to `main` and pull requests targeting `main`.
 
 Near-term:
 
-- Add checked-in screenshots or a short GIF for the Streamlit demo.
+- Add a short GIF for the Streamlit demo.
 - Refresh the local metrics report after each material modeling change.
 - Expand error analysis with examples of false positives and false negatives.
 - Add calibration checks before discussing threshold selection more deeply.
