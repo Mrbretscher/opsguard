@@ -96,7 +96,37 @@ def test_example_input_presets_cover_model_features() -> None:
         assert set(preset.values) == set(FEATURE_COLUMNS)
 
 
-def test_threshold_tradeoff_rows_are_numeric_sorted_and_include_f1() -> None:
+def test_threshold_tradeoff_rows_support_current_evaluator_keys() -> None:
+    metrics = {
+        "threshold_table": [
+            {
+                "threshold": 0.6,
+                "precision_failure": 0.5,
+                "recall_failure": 0.25,
+            },
+            {
+                "threshold": "bad",
+                "precision_failure": 0.5,
+                "recall_failure": 0.5,
+            },
+            {
+                "threshold": 0.2,
+                "precision_failure": 0.25,
+                "recall_failure": 0.75,
+                "f1_failure": 0.4,
+            },
+        ]
+    }
+
+    rows = threshold_tradeoff_rows(metrics)
+
+    assert rows == [
+        {"threshold": 0.2, "precision": 0.25, "recall": 0.75, "f1": 0.4},
+        {"threshold": 0.6, "precision": 0.5, "recall": 0.25, "f1": 1 / 3},
+    ]
+
+
+def test_threshold_tradeoff_rows_support_legacy_metric_keys() -> None:
     metrics = {
         "threshold_table": [
             {"threshold": 0.6, "precision": 0.5, "recall": 0.25},

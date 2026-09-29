@@ -210,8 +210,8 @@ def _selected_report_artifact_dir(report: Mapping[str, Any] | None) -> Path | No
 
 def _numeric_threshold_row(item: Mapping[str, Any]) -> dict[str, float] | None:
     threshold = _finite_float(item.get("threshold"))
-    precision = _finite_float(item.get("precision"))
-    recall = _finite_float(item.get("recall"))
+    precision = _metric_float(item, "precision_failure", "precision")
+    recall = _metric_float(item, "recall_failure", "recall")
     if threshold is None or precision is None or recall is None:
         return None
 
@@ -220,12 +220,21 @@ def _numeric_threshold_row(item: Mapping[str, Any]) -> dict[str, float] | None:
         "precision": precision,
         "recall": recall,
     }
-    f1 = _finite_float(item.get("f1"))
+    f1 = _metric_float(item, "f1_failure", "f1")
     if f1 is None and precision + recall > 0.0:
         f1 = 2.0 * precision * recall / (precision + recall)
     if f1 is not None:
         row["f1"] = f1
     return row
+
+
+def _metric_float(
+    item: Mapping[str, Any], current_key: str, legacy_key: str
+) -> float | None:
+    current_value = _finite_float(item.get(current_key))
+    if current_value is not None:
+        return current_value
+    return _finite_float(item.get(legacy_key))
 
 
 def _finite_float(value: object) -> float | None:
