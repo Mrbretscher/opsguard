@@ -18,6 +18,9 @@ Predictive maintenance systems estimate whether equipment is at risk of failure 
 - Builds a leakage-controlled feature matrix.
 - Trains Dummy, logistic-regression, and random-forest baselines.
 - Evaluates with metrics appropriate for class imbalance.
+- Persists the selected baseline artifact for local inference experiments.
+- Provides a Streamlit GUI for single-record risk checks and report review.
+- Provides Docker packaging for the local GUI demo.
 - Provides unit tests and local verification scripts.
 
 ## Technology Stack
@@ -33,7 +36,9 @@ Predictive maintenance systems estimate whether equipment is at risk of failure 
 - Ruff
 - mypy
 - JupyterLab
+- Streamlit
+- Docker
 
 ## Scope Boundaries
 
-OpsGuard is currently a local baseline workflow. It does not yet include API serving, dashboards, model tracking, monitoring, deployment, Docker, or production data storage.
+OpsGuard is currently a local baseline workflow with a demo GUI and local Docker packaging. It does not yet include API serving, experiment tracking, production monitoring, cloud deployment, alert routing, authentication, or production data storage.

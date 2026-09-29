@@ -325,7 +325,7 @@ Optional Docker GUI smoke test:
 
 - `.\scripts\docker_smoke_test.ps1`
 
-Latest verified local check from this workspace: `52 passed, 1 skipped` in the
+Latest verified local check from this workspace: `53 passed, 1 skipped` in the
 pytest suite, with Ruff and mypy passing.
 
 GitHub Actions is configured to run the same core checks on Python 3.11 for
