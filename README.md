@@ -1,79 +1,117 @@
 # OpsGuard
 
-OpsGuard is a lean AI-engineering portfolio project for reproducible predictive-maintenance baselines on the UCI AI4I 2020 Predictive Maintenance Dataset.
+OpsGuard is a Python 3.11 predictive-maintenance portfolio project that trains,
+evaluates, persists, and demonstrates leakage-controlled scikit-learn baselines
+for binary machine-failure risk on the UCI AI4I 2020 dataset.
+
+This is not a production maintenance system. It is a local portfolio baseline
+that demonstrates practical ML engineering habits: data acquisition, validation,
+feature controls, model comparison, reproducible artifacts, evaluation reporting,
+single-record inference, and a Streamlit demo.
 
 ## Current Status
 
-Milestone 0, Milestone 1A, and Milestone 1B are implemented as a local scikit-learn baseline workflow. The project can fetch the AI4I dataset, validate schema and quality expectations, build leakage-controlled tabular features, train three baseline classifiers, and evaluate the result with imbalanced-classification metrics.
+Implemented:
 
-This is not a production maintenance system. It is a portfolio baseline intended to demonstrate sound ML engineering habits before adding heavier MLOps, deployment, monitoring, or time-series components.
-
-## What It Demonstrates
-
-- Python 3.11 package using a `src/` layout.
-- Dataset acquisition without committing the raw dataset.
-- Dataset attribution and licensing documentation.
-- Schema and quality validation.
-- Reproducible preprocessing with scikit-learn `Pipeline` and `ColumnTransformer`.
+- UCI AI4I data acquisition through `ucimlrepo`.
+- Schema and quality validation for the local CSV.
+- Leakage-controlled feature construction.
+- Stratified train/test split with fixed random seed `42`.
 - Dummy, logistic-regression, and random-forest baselines.
-- Evaluation for an imbalanced binary failure-classification problem.
-- Machine-readable local metrics and diagnostic plots under ignored `reports/`.
-- Persisted selected model artifacts under ignored `models/`.
-- Optional Streamlit GUI for local single-record inference and report review.
-- Unit tests, Ruff formatting/linting, mypy, and PowerShell verification scripts.
+- Imbalanced-classification metrics, confusion matrices, threshold tables, and
+  diagnostic plots.
+- Saved scikit-learn model artifacts for local inference experiments.
+- Optional Streamlit GUI for single-record risk checks and report review.
+- Ruff, mypy, pytest, coverage, and a PowerShell verification script.
 
-## Dataset
+Not implemented:
 
-OpsGuard uses the AI4I 2020 Predictive Maintenance Dataset from the UCI Machine Learning Repository.
+- Production deployment, monitoring, alert routing, calibration governance,
+  Docker packaging, cloud infrastructure, or a live industrial data feed.
 
-- Source: <https://archive.ics.uci.edu/dataset/601/ai4i>
-- DOI: `10.24432/C5HS5C`
-- License: Creative Commons Attribution 4.0 International, CC BY 4.0
-- File: `ai4i2020.csv`
-- Size: approximately 10,000 rows
-- Nature: synthetic predictive-maintenance data
+## Demo Screenshots
 
-The full dataset is not committed to this repository. Fetch it locally with the command below.
+No checked-in screenshots are currently available. Suggested placeholders:
 
-## Local Setup
+- `docs/images/opsguard-risk-check.png`: Streamlit risk-check screen with an
+  example input preset and result panel.
+- `docs/images/opsguard-threshold-tradeoff.png`: Streamlit evaluation screen
+  showing the threshold tradeoff chart and selected-model metrics.
 
-Install Python 3.11 and make sure it is available through the Windows launcher as `py -3.11`.
+## Quick Demo
 
-```powershell
-.\scripts\setup.ps1
-.\.venv\Scripts\Activate.ps1
-```
-
-## Fetch Data
+Install the optional app dependency, generate local artifacts, and launch the
+GUI:
 
 ```powershell
-python scripts/fetch_ai4i.py
+.\.venv\Scripts\python.exe -m pip install -e ".[app]"
+.\.venv\Scripts\python.exe scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
+.\scripts\run_streamlit_app.ps1
 ```
 
-This uses the existing `ucimlrepo` dependency to fetch UCI dataset ID `601`,
-validates the returned AI4I dataset, writes the raw CSV to
-`data/raw/ai4i2020.csv`, and prints a concise local validation summary. The raw
-CSV is ignored by Git.
+The app opens locally with:
 
-## Run Baselines
+- a first-screen project summary;
+- example machine-condition presets;
+- editable model inputs;
+- a risk result panel;
+- threshold tradeoff visualization;
+- limitations and links to the dataset and evaluation docs.
 
-```powershell
-python scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports
+## Problem
+
+Predictive maintenance models are often evaluated with misleading headline
+accuracy because equipment failures are rare. OpsGuard frames the problem as an
+imbalanced binary classification task: predict whether a machine-condition row
+corresponds to `Machine failure = 1` while keeping target-derived columns out of
+the feature set.
+
+The project is designed to show how an AI engineer can build a small but
+defensible baseline before moving to heavier MLOps or production-serving work.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UCI[UCI AI4I dataset] --> Fetch[scripts/fetch_ai4i.py]
+    Fetch --> Raw[data/raw/ai4i2020.csv]
+    Raw --> Validate[validation.py]
+    Validate --> Features[features.py]
+    Features --> Train[training.py]
+    Train --> Metrics[reports/baseline_metrics.json]
+    Train --> Plots[reports/plots/*.png]
+    Train --> Artifact[models/*/pipeline.pkl + metadata.json]
+    Artifact --> Inference[inference.py]
+    Metrics --> App[streamlit_app.py]
+    Plots --> App
+    Inference --> App
 ```
 
-The installed CLI exposes the same workflow:
+Component responsibilities:
 
-```powershell
-opsguard evaluate-baselines --data data/raw/ai4i2020.csv --report-dir reports
-```
+- `src/opsguard/data/ai4i.py`: load the local AI4I CSV.
+- `src/opsguard/validation.py`: validate schema, target columns, and basic data
+  quality.
+- `src/opsguard/features.py`: select only pre-label operational features and
+  exclude identifiers, targets, and failure-mode labels.
+- `src/opsguard/modeling.py`: define the baseline pipelines and stratified
+  train/test split.
+- `src/opsguard/evaluation.py`: compute metrics, threshold tradeoff rows,
+  confusion-matrix interpretation, and error-analysis notes.
+- `src/opsguard/training.py`: orchestrate training, reporting, plots, and model
+  artifact persistence.
+- `src/opsguard/inference.py`: validate one machine-condition record and score
+  it with a saved artifact.
+- `src/opsguard/streamlit_app.py`: local GUI for demo inference and report
+  review.
 
-The baseline workflow trains:
+## Model Approach
 
-- `DummyClassifier(strategy="most_frequent")`
-- `LogisticRegression(class_weight="balanced")`
-- `RandomForestClassifier(class_weight="balanced")`
+Task:
 
-Features are limited to operational columns available before the label:
+- Binary classification for `Machine failure`.
+
+Input features:
 
 - `Type`
 - `Air temperature [K]`
@@ -82,41 +120,115 @@ Features are limited to operational columns available before the label:
 - `Torque [Nm]`
 - `Tool wear [min]`
 
-Identifier columns, `Product ID`, `Machine failure`, and failure-mode target columns are excluded from the feature matrix.
+Excluded columns:
 
-The workflow uses a reproducible stratified train/test split with random seed `42`. The split is performed before any preprocessing is fit. Encoders and scalers live inside scikit-learn `Pipeline` and `ColumnTransformer` objects and are fit only on the training split.
+- `UDI` / `UID`
+- `Product ID`
+- `Machine failure`
+- `TWF`
+- `HDF`
+- `PWF`
+- `OSF`
+- `RNF`
 
-## Evaluation
+Baselines:
 
-The evaluation emphasizes minority-class failure detection rather than plain accuracy. Accuracy is reported for context only and is not used by itself to select a model.
+- `DummyClassifier(strategy="most_frequent")`
+- `LogisticRegression(class_weight="balanced")`
+- `RandomForestClassifier(class_weight="balanced")`
 
-- Class distribution
-- Accuracy for context only
-- Failure-class precision
-- Failure-class recall
-- Failure-class F1
-- ROC-AUC
-- PR-AUC / average precision
-- Confusion matrix
-- Balanced accuracy
-- Classification report
-- Threshold table with precision, recall, F1, confusion counts, false-positive rate, and false-negative rate
-- Operating-threshold metadata for the selected baseline
-- Confusion-matrix interpretation and false-positive/false-negative notes
+Preprocessing is fit inside scikit-learn pipelines after the train/test split.
+The categorical feature is one-hot encoded with unknown-category handling.
+Numeric features are scaled for logistic regression and passed through for the
+dummy and random-forest baselines.
 
-The default threshold is `0.5`. It is recorded as a fixed reporting convention, not an optimized or operationally approved operating point. No threshold is presented as production-ready, and the final test set is not used for hyperparameter tuning or threshold selection in Milestone 1B.
+## Verified Results
 
-Metrics are saved to `reports/baseline_metrics.json`. Confusion-matrix and precision-recall plots are saved to `reports/plots/`. These generated files are ignored by Git.
+The metrics below are from the local report at `reports/baseline_metrics.json`.
+They use a stratified 80/20 train/test split with random seed `42`. The held-out
+test set contains 2,000 rows: 1,932 non-failure rows and 68 failure rows.
 
-The workflow also selects the baseline with the highest average precision and
-saves it under `models/` with:
+| Model | Average precision | ROC-AUC | Balanced accuracy | Failure precision | Failure recall | Failure F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Dummy most frequent | 0.034 | 0.500 | 0.500 | 0.000 | 0.000 | 0.000 |
+| Logistic regression | 0.382 | 0.907 | 0.824 | 0.142 | 0.824 | 0.242 |
+| Random forest | 0.737 | 0.962 | 0.880 | 0.589 | 0.779 | 0.671 |
 
-- `pipeline.pkl`: the fitted scikit-learn pipeline, including preprocessing.
-- `metadata.json`: the model name, feature schema, threshold, random seed,
-  training timestamp, dataset source, selection metric, and key evaluation
-  metrics, including the selected threshold metadata and error-analysis notes.
+At the fixed reporting threshold of `0.5`, the random-forest baseline produced
+this held-out confusion matrix:
 
-Load a saved artifact and score one machine-condition record with:
+| Actual class | Predicted no failure | Predicted failure |
+| --- | ---: | ---: |
+| No failure | 1,895 | 37 |
+| Failure | 15 | 53 |
+
+Interpretation: the random forest caught 53 of 68 failure rows and missed 15
+failure rows at the reporting threshold. It also flagged 37 non-failure rows.
+These counts are useful for discussing review tradeoffs, not for approving an
+operational threshold.
+
+## Dataset and Licensing
+
+OpsGuard uses the AI4I 2020 Predictive Maintenance Dataset from the UCI Machine
+Learning Repository.
+
+- Source: <https://archive.ics.uci.edu/dataset/601/ai4i>
+- DOI: `10.24432/C5HS5C`
+- License: Creative Commons Attribution 4.0 International, CC BY 4.0
+- Size: 10,000 rows in the current local validation/reporting workflow
+- Nature: synthetic predictive-maintenance data
+
+The raw dataset is not committed to this repository. See
+[docs/DATA_CARD.md](docs/DATA_CARD.md) for schema, attribution, validation
+checks, and limitations.
+
+## Local Setup
+
+Install Python 3.11 and make sure it is available through the Windows launcher
+as `py -3.11`.
+
+```powershell
+.\scripts\setup.ps1
+.\.venv\Scripts\Activate.ps1
+```
+
+Fetch the dataset:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/fetch_ai4i.py
+```
+
+Train baselines and write local reports/artifacts:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
+```
+
+The installed CLI exposes the same workflow:
+
+```powershell
+opsguard evaluate-baselines --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
+```
+
+## Streamlit GUI
+
+Install the optional app dependency:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[app]"
+```
+
+Launch the GUI:
+
+```powershell
+.\scripts\run_streamlit_app.ps1
+```
+
+The GUI reads the latest metrics JSON from `reports/` and loads a saved model
+artifact from `models/`. The threshold slider is exploratory and does not modify
+the saved artifact.
+
+## Single-Record Inference Example
 
 ```python
 from opsguard.inference import predict_failure
@@ -135,42 +247,9 @@ result = predict_failure(
 print(result.to_dict())
 ```
 
-## Streamlit GUI
+## Testing and Verification
 
-Install the optional app dependency after the normal local setup:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[app]"
-```
-
-Generate local reports and a saved model artifact first:
-
-```powershell
-.\.venv\Scripts\python.exe scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
-```
-
-Then launch the GUI:
-
-```powershell
-.\scripts\run_streamlit_app.ps1
-```
-
-The app reads the latest JSON metrics report from `reports/`, loads the selected
-saved model artifact from `models/`, and opens with a portfolio-demo summary of
-the selected baseline, artifact threshold, local report, dataset documentation,
-and evaluation plan. The risk-check screen includes example machine-condition
-presets that can be edited before scoring the six leakage-controlled model
-inputs. Results are shown as an exploratory risk panel, not as maintenance
-instructions.
-
-The evaluation screen displays the selected model's metrics, diagnostic plots,
-and a threshold tradeoff chart. Changing the GUI threshold does not modify the
-saved artifact and should not be treated as an approved production operating
-point. The app also includes a limitations screen to keep the demo clear about
-synthetic data, class imbalance, missing production workflows, and threshold
-selection caveats.
-
-## Verify
+Run the full local verification suite:
 
 ```powershell
 .\scripts\verify.ps1
@@ -184,41 +263,53 @@ The verification script runs:
 - `pytest --cov=opsguard`
 - package import smoke test
 
-## CI Checks
+Latest verified local check from this workspace: `49 passed, 1 skipped` in the
+pytest suite, with Ruff and mypy passing.
 
-GitHub Actions runs the same checks on Python 3.11 for pushes to `main` and
-pull requests targeting `main`.
-
-Run the CI commands locally with:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m ruff format --check .
-.\.venv\Scripts\python.exe -m mypy src/opsguard
-.\.venv\Scripts\python.exe -m pytest --cov=opsguard
-.\.venv\Scripts\python.exe -c "import opsguard; print(opsguard.__version__)"
-```
+GitHub Actions is configured to run the same core checks on Python 3.11 for
+pushes to `main` and pull requests targeting `main`.
 
 ## Documentation
 
-- [Project brief](docs/project_brief.md)
 - [Data card](docs/DATA_CARD.md)
 - [Evaluation plan](docs/evaluation_plan.md)
+- [Model card](docs/model_card.md)
+- [Demo script](docs/demo_script.md)
+- [Project brief](docs/project_brief.md)
 - [Roadmap](docs/roadmap.md)
-
-## Explicit Non-Goals For This Release
-
-This release intentionally excludes TensorFlow, MLflow, FastAPI, Docker, cloud deployment, model monitoring, MetroPT-3, and a production database.
 
 ## Limitations
 
-- AI4I is synthetic, so results may not transfer to real equipment or site-specific maintenance operations.
-- The failure class is rare, making accuracy a weak success measure.
-- The random forest is a justified first tree-based baseline for nonlinear feature interactions, not a tuned final model.
-- Failure-mode labels are excluded to avoid leakage into the binary target.
-- Milestone 1B does not include calibration, production monitoring, or human-review workflow integration.
+- The dataset is synthetic and may not represent real equipment, sensor drift,
+  site-specific maintenance policies, or real failure mechanisms.
+- The current split is stratified, not chronological; row order is not treated
+  as a validated time axis.
+- The fixed `0.5` threshold is a reporting convention, not an optimized or
+  operationally approved threshold.
+- The Streamlit app scores one record at a time and does not include alert
+  routing, operator workflow, calibration review, monitoring, or access control.
+- Accuracy is reported only for context because the failure class is rare.
+- Failure-mode labels are excluded from inputs to avoid target leakage.
+
+## Roadmap
+
+Near-term:
+
+- Add checked-in screenshots or a short GIF for the Streamlit demo.
+- Refresh the local metrics report after each material modeling change.
+- Expand error analysis with examples of false positives and false negatives.
+- Add calibration checks before discussing threshold selection more deeply.
+
+Later:
+
+- Add Docker packaging.
+- Add an API serving layer.
+- Add experiment tracking.
+- Evaluate a dataset with a validated time axis.
+- Add monitoring and drift checks.
+- Explore additional predictive-maintenance datasets such as MetroPT-3.
 
 ## License
 
-Project code is released under the MIT License. Dataset rights remain with the dataset publisher and are governed by CC BY 4.0.
+Project code is released under the MIT License. Dataset rights remain with the
+dataset publisher and are governed by CC BY 4.0.
