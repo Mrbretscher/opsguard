@@ -27,7 +27,7 @@ Implemented:
 Not implemented:
 
 - Production deployment, monitoring, alert routing, calibration governance,
-  Docker packaging, cloud infrastructure, or a live industrial data feed.
+  cloud infrastructure, or a live industrial data feed.
 
 ## Demo Screenshots
 
@@ -228,6 +228,59 @@ The GUI reads the latest metrics JSON from `reports/` and loads a saved model
 artifact from `models/`. The threshold slider is exploratory and does not modify
 the saved artifact.
 
+## Docker GUI Demo
+
+Build the local GUI demo image:
+
+```powershell
+docker build -t opsguard-gui-demo .
+```
+
+Run the Streamlit app:
+
+```powershell
+docker run --rm -p 8501:8501 opsguard-gui-demo
+```
+
+Open <http://localhost:8501>. Without mounted artifacts, the app still starts
+and explains that reports and model artifacts are missing. This is intentional:
+the Docker image installs the package and demo app, but it does not bake in
+local datasets, reports, or model artifacts.
+
+Mount existing local artifacts generated on the host:
+
+```powershell
+docker run --rm -p 8501:8501 `
+  -v "${PWD}\reports:/app/reports:ro" `
+  -v "${PWD}\models:/app/models:ro" `
+  opsguard-gui-demo
+```
+
+Generate data, reports, and model artifacts inside a temporary container volume:
+
+```powershell
+docker run --rm `
+  -v opsguard-demo-artifacts:/app/data `
+  -v opsguard-demo-reports:/app/reports `
+  -v opsguard-demo-models:/app/models `
+  opsguard-gui-demo `
+  sh -c "python scripts/fetch_ai4i.py && python scripts/train_baseline.py --data data/raw/ai4i2020.csv --report-dir reports --model-dir models"
+
+docker run --rm -p 8501:8501 `
+  -v opsguard-demo-reports:/app/reports:ro `
+  -v opsguard-demo-models:/app/models:ro `
+  opsguard-gui-demo
+```
+
+Run the lightweight Docker smoke test, if Docker is installed and running:
+
+```powershell
+.\scripts\docker_smoke_test.ps1
+```
+
+The smoke test builds the image, starts the container, checks Streamlit's
+`/_stcore/health` endpoint, and stops the container.
+
 ## Single-Record Inference Example
 
 ```python
@@ -263,7 +316,11 @@ The verification script runs:
 - `pytest --cov=opsguard`
 - package import smoke test
 
-Latest verified local check from this workspace: `49 passed, 1 skipped` in the
+Optional Docker GUI smoke test:
+
+- `.\scripts\docker_smoke_test.ps1`
+
+Latest verified local check from this workspace: `52 passed, 1 skipped` in the
 pytest suite, with Ruff and mypy passing.
 
 GitHub Actions is configured to run the same core checks on Python 3.11 for
@@ -302,7 +359,6 @@ Near-term:
 
 Later:
 
-- Add Docker packaging.
 - Add an API serving layer.
 - Add experiment tracking.
 - Evaluate a dataset with a validated time axis.

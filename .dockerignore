@@ -1,0 +1,39 @@
+# Git and local development state
+.git/
+.github/
+.venv/
+venv/
+.env
+.tmp/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Notebook and editor state
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local data and generated artifacts
+data/**
+!data/
+!data/.gitkeep
+!data/README.md
+!data/raw/
+!data/raw/.gitkeep
+models/
+outputs/
+reports/
+
+# Large or non-runtime development content
+notebooks/
