@@ -207,8 +207,11 @@ Train baselines and write local reports/artifacts:
 The installed CLI exposes the same workflow:
 
 ```powershell
-opsguard evaluate-baselines --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
+.\.venv\Scripts\opsguard.exe evaluate-baselines --data data/raw/ai4i2020.csv --report-dir reports --model-dir models
 ```
+
+If the virtual environment is activated in the current PowerShell session, the
+shorter `opsguard evaluate-baselines ...` form is also available.
 
 ## Streamlit GUI
 
